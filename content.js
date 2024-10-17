@@ -1,11 +1,35 @@
 // Dictionary to store marker times for keys 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'
 let markers = {
-  q: null, w: null, e: null, r: null, t: null,
-  y: null, u: null, i: null, o: null, p: null
+  z: null, x: null, c: null, v: null, b: null
 };
+
+// TODO: handle cases of playlists
 
 // Call loadMarkers when the content script runs
 loadMarkers(window.location.href);
+
+// detect URL changes (chromium native)
+navigation.addEventListener('navigate', (event) => {
+  loadMarkers(event.destination.url);
+});
+
+// Add event listeners for key presses
+document.addEventListener('keydown', (event) => {
+  const key = event.key.toLowerCase();
+
+  // Handle setting or playing from marker
+  if (key in markers) {
+    if (event.ctrlKey) {
+      deleteMarker(key); // Ctrl + key: delete marker
+    } else {
+      if (markers[key] === null) {
+        setMarker(key); // No marker exists, set one
+      } else {
+        playFromMarker(key); // Marker exists, play from it
+      }
+    }
+  }
+});
 
 // Function to set a marker at the current video time for the given key
 function setMarker(key) {
@@ -38,6 +62,15 @@ function loadMarkers(videoUrl) {
         }
       }
       console.log(`Markers for video ${videoId} loaded.`);
+    }
+    else {
+      // cleanup
+      for (let key in markers) {
+        markers[key] = null;
+      }
+      document.querySelectorAll('.custom-marker')
+        .forEach(marker => marker.remove());
+      console.log(`No markers found for video ${videoId}.`);
     }
   });
 }
@@ -103,29 +136,10 @@ function removeMarkerFromProgressBar(key, progressBar) {
 // Utility function to get a color based on the key
 function getMarkerColor(key) {
   const colors = {
-    q: 'green', w: 'blue', e: 'red', r: 'purple', t: 'orange',
-    y: 'yellow', u: 'cyan', i: 'magenta', o: 'brown', p: 'pink'
+    z: 'green', x: 'blue', c: 'brown', v: 'purple', b: 'cyan',
   };
   return colors[key] || 'black';
 }
-
-// Add event listeners for key presses
-document.addEventListener('keydown', (event) => {
-  const key = event.key.toLowerCase();
-
-  // Handle setting or playing from marker
-  if (key in markers) {
-    if (event.ctrlKey) {
-      deleteMarker(key); // Ctrl + key: delete marker
-    } else {
-      if (markers[key] === null) {
-        setMarker(key); // No marker exists, set one
-      } else {
-        playFromMarker(key); // Marker exists, play from it
-      }
-    }
-  }
-});
 
 // Optional: CSS for tooltips (append to the document head)
 const style = document.createElement('style');

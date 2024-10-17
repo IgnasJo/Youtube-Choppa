@@ -52,13 +52,19 @@ function saveMarkers(videoUrl) {
 
 // Function to load markers from chrome.storage
 function loadMarkers(videoUrl) {
+  // start without markers
+  document.querySelectorAll('.custom-marker')
+    .forEach(marker => marker.remove());
   const videoId = new URL(videoUrl).searchParams.get('v');
   chrome.storage.local.get([videoId], (result) => {
     if (result[videoId]) {
       markers = result[videoId];
       for (let key in markers) {
         if (markers[key] !== null) {
-          drawMarker(key, markers[key], document.querySelector('.ytp-progress-bar'));
+          // delay for loading
+          setTimeout(
+           () => drawMarker(key, markers[key], document.querySelector('.ytp-progress-bar')),
+           1000);
         }
       }
       console.log(`Markers for video ${videoId} loaded.`);
@@ -68,8 +74,6 @@ function loadMarkers(videoUrl) {
       for (let key in markers) {
         markers[key] = null;
       }
-      document.querySelectorAll('.custom-marker')
-        .forEach(marker => marker.remove());
       console.log(`No markers found for video ${videoId}.`);
     }
   });

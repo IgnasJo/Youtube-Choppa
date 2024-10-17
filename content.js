@@ -56,6 +56,10 @@ function drawMarker(key, time, progressBar) {
   markerElement.style.backgroundColor = getMarkerColor(key);
   markerElement.style.zIndex = '1000';
 
+  // Set hover tooltip: Show the key and the timestamp
+  const timeFormatted = new Date(time * 1000).toISOString().substr(11, 8); // Format time as HH:MM:SS
+  markerElement.setAttribute('title', `${key.toUpperCase()}: ${timeFormatted}`);
+
   // Remove old marker for the same key
   const existingMarker = document.querySelector(`.marker-${key}`);
   if (existingMarker) {
@@ -100,3 +104,29 @@ document.addEventListener('keydown', (event) => {
       }
   }
 });
+
+// Optional: CSS for tooltips (append to the document head)
+const style = document.createElement('style');
+style.textContent = `
+.custom-marker {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  z-index: 1000;
+  cursor: pointer;
+}
+.custom-marker[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 5px;
+  font-size: 12px;
+  border-radius: 3px;
+  white-space: nowrap;
+  top: -25px;
+  left: -10px;
+  z-index: 1001;
+}
+`;
+document.head.appendChild(style);

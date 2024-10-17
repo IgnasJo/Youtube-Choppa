@@ -4,28 +4,50 @@ let markers = {
   y: null, u: null, i: null, o: null, p: null
 };
 
+// Call loadMarkers when the content script runs
+loadMarkers(window.location.href);
+
 // Function to set a marker at the current video time for the given key
-function setMarker(key, event) {
+function setMarker(key) {
   const video = document.querySelector('video');
-  const videoProgressBar = document.querySelector('.ytp-progress-bar');
+  const videoUrl = window.location.href;
   const currentTime = video.currentTime;
 
-  // Save marker time for the key
-  markers[key] = currentTime;
+  markers[key] = currentTime; // Set marker
+  drawMarker(key, currentTime, document.querySelector('.ytp-progress-bar'));
+  saveMarkers(videoUrl); // Save markers after setting
+}
 
-  // Visual marker on progress bar
-  drawMarker(key, currentTime, videoProgressBar);
-  console.log(`Marker for '${key}' set at: ${currentTime.toFixed(2)} seconds`);
+// Function to save markers to chrome.storage
+function saveMarkers(videoUrl) {
+  const videoId = new URL(videoUrl).searchParams.get('v'); // Extract video ID
+  chrome.storage.local.set({ [videoId]: markers }, () => {
+    console.log(`Markers for video ${videoId} saved.`);
+  });
+}
+
+// Function to load markers from chrome.storage
+function loadMarkers(videoUrl) {
+  const videoId = new URL(videoUrl).searchParams.get('v');
+  chrome.storage.local.get([videoId], (result) => {
+    if (result[videoId]) {
+      markers = result[videoId];
+      for (let key in markers) {
+        if (markers[key] !== null) {
+          drawMarker(key, markers[key], document.querySelector('.ytp-progress-bar'));
+        }
+      }
+      console.log(`Markers for video ${videoId} loaded.`);
+    }
+  });
 }
 
 // Function to delete a marker for the given key
 function deleteMarker(key) {
-  const videoProgressBar = document.querySelector('.ytp-progress-bar');
-
   if (markers[key] !== null) {
-      markers[key] = null;
-      removeMarkerFromProgressBar(key, videoProgressBar); // Remove the visual marker
-      console.log(`Marker for '${key}' deleted.`);
+    markers[key] = null; // Remove marker
+    removeMarkerFromProgressBar(key, document.querySelector('.ytp-progress-bar'));
+    saveMarkers(window.location.href); // Save markers after deletion
   }
 }
 
@@ -35,9 +57,9 @@ function playFromMarker(key) {
   const markerTime = markers[key];
 
   if (markerTime !== null) {
-      video.currentTime = markerTime;
-      video.play();
-      console.log(`Playing from marker for '${key}' at: ${markerTime.toFixed(2)} seconds`);
+    video.currentTime = markerTime;
+    video.play();
+    console.log(`Playing from marker for '${key}' at: ${markerTime.toFixed(2)} seconds`);
   }
 }
 
@@ -63,7 +85,7 @@ function drawMarker(key, time, progressBar) {
   // Remove old marker for the same key
   const existingMarker = document.querySelector(`.marker-${key}`);
   if (existingMarker) {
-      existingMarker.remove();
+    existingMarker.remove();
   }
 
   // Add new marker
@@ -74,15 +96,15 @@ function drawMarker(key, time, progressBar) {
 function removeMarkerFromProgressBar(key, progressBar) {
   const markerElement = document.querySelector(`.marker-${key}`);
   if (markerElement) {
-      markerElement.remove();
+    markerElement.remove();
   }
 }
 
 // Utility function to get a color based on the key
 function getMarkerColor(key) {
   const colors = {
-      q: 'green', w: 'blue', e: 'red', r: 'purple', t: 'orange',
-      y: 'yellow', u: 'cyan', i: 'magenta', o: 'brown', p: 'pink'
+    q: 'green', w: 'blue', e: 'red', r: 'purple', t: 'orange',
+    y: 'yellow', u: 'cyan', i: 'magenta', o: 'brown', p: 'pink'
   };
   return colors[key] || 'black';
 }
@@ -93,15 +115,15 @@ document.addEventListener('keydown', (event) => {
 
   // Handle setting or playing from marker
   if (key in markers) {
-      if (event.ctrlKey) {
-          deleteMarker(key); // Ctrl + key: delete marker
+    if (event.ctrlKey) {
+      deleteMarker(key); // Ctrl + key: delete marker
+    } else {
+      if (markers[key] === null) {
+        setMarker(key); // No marker exists, set one
       } else {
-          if (markers[key] === null) {
-              setMarker(key); // No marker exists, set one
-          } else {
-              playFromMarker(key); // Marker exists, play from it
-          }
+        playFromMarker(key); // Marker exists, play from it
       }
+    }
   }
 });
 

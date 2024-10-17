@@ -1,16 +1,23 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Marker Playback",
+  "name": "YouTube Video Marker",
   "version": "1.0",
-  "description": "Set a marker on the YouTube timeline with a double-click and start playback from that point with the Q key.",
+  "description": "Set and manage markers on YouTube videos.",
   "permissions": [
-    "activeTab",
-    "scripting"
+    "storage",
+    "activeTab"
   ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
-      "matches": ["*://www.youtube.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ]
 }

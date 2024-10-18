@@ -54,6 +54,8 @@ function setMarker(key) {
 // Function to save markers to chrome.storage
 function saveMarkers(videoUrl) {
   const videoId = new URL(videoUrl).searchParams.get('v'); // Extract video ID
+  const videoTitle = document.querySelector('#title > h1').innerText || 'Unknown Title'; // Get video title
+  const videoAuthor = document.querySelector('#channel-name a').innerText || 'Unknown Author'; // Get video author
 
   // Check if all markers are null
   const allMarkersNull = Object.values(markers).every(value => value === null);
@@ -63,9 +65,17 @@ function saveMarkers(videoUrl) {
     chrome.storage.local.remove(videoId, () => {
       console.log(`All markers are null. Record for video ${videoId} removed.`);
     });
-  } else {
+  }
+  else {
+
+    // Save markers along with video title and author
+    const videoData = {
+      markers: markers,
+      title: videoTitle,
+      author: videoAuthor
+    };
     // Save the markers if there's at least one valid marker
-    chrome.storage.local.set({ [videoId]: markers }, () => {
+    chrome.storage.local.set({ [videoId]: videoData }, () => {
       console.log(`Markers for video ${videoId} saved.`);
     });
   }
@@ -83,7 +93,7 @@ function loadMarkers(videoUrl) {
   const videoId = new URL(videoUrl).searchParams.get('v');
   chrome.storage.local.get([videoId], (result) => {
     if (result[videoId]) {
-      markers = result[videoId];
+      markers = result[videoId].markers;
       for (let key in markers) {
         if (markers[key] !== null) {
           // delay for loading
@@ -160,47 +170,3 @@ function removeMarkerFromProgressBar(key) {
     markerElement.remove();
   }
 }
-
-// Optional: CSS for tooltips (append to the document head)
-const style = document.createElement('style');
-style.textContent = `
-.custom-marker {
-  position: absolute;
-  width: 2px;
-  height: 200%;
-  top: -100%;
-  border: 1px solid black;
-  z-index: 1000;
-  cursor: pointer;
-}
-.custom-marker[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 2px 5px;
-  font-size: 12px;
-  border-radius: 3px;
-  white-space: nowrap;
-  top: -25px;
-  left: -10px;
-  z-index: 1001;
-}
-.marker-bubble {
-  position: absolute;
-  background-color: inherit;
-  width: 12px;
-  height: 12px;
-  color: white;
-  border-radius: 50%;
-  top: -20px;
-  left: -3px;
-  border: inherit;
-  font-size: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-`;
-document.head.appendChild(style);

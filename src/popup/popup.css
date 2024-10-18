@@ -1,0 +1,26 @@
+body {
+  width: 400px; /* Set desired width here */
+  height: auto;
+  font-family: Arial, sans-serif;
+}
+
+.video-item {
+  margin-bottom: 10px;
+}
+
+.expand-btn {
+  cursor: pointer;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.marker-list {
+  display: flex;
+  flex-direction: column;
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.marker-link {
+  cursor: pointer;
+}

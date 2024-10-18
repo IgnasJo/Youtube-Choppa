@@ -13,6 +13,14 @@ navigation.addEventListener('navigate', (event) => {
   loadMarkers(event.destination.url);
 });
 
+// Utility function to get a color based on the key
+function getMarkerColor(key) {
+  const colors = {
+    z: 'green', x: 'blue', c: 'brown', v: 'purple', b: 'orange',
+  };
+  return colors[key] || 'black';
+}
+
 // Add event listeners for key presses
 document.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
@@ -21,7 +29,8 @@ document.addEventListener('keydown', (event) => {
   if (key in markers) {
     if (event.ctrlKey) {
       deleteMarker(key); // Ctrl + key: delete marker
-    } else {
+    }
+    else if (event.altKey) {
       if (markers[key] === null) {
         setMarker(key); // No marker exists, set one
       } else {
@@ -45,16 +54,32 @@ function setMarker(key) {
 // Function to save markers to chrome.storage
 function saveMarkers(videoUrl) {
   const videoId = new URL(videoUrl).searchParams.get('v'); // Extract video ID
-  chrome.storage.local.set({ [videoId]: markers }, () => {
-    console.log(`Markers for video ${videoId} saved.`);
-  });
+
+  // Check if all markers are null
+  const allMarkersNull = Object.values(markers).every(value => value === null);
+
+  if (allMarkersNull) {
+    // Remove the video entry from storage if all markers are null
+    chrome.storage.local.remove(videoId, () => {
+      console.log(`All markers are null. Record for video ${videoId} removed.`);
+    });
+  } else {
+    // Save the markers if there's at least one valid marker
+    chrome.storage.local.set({ [videoId]: markers }, () => {
+      console.log(`Markers for video ${videoId} saved.`);
+    });
+  }
+}
+
+
+function removeExistingMarkers() {
+  const existingMarkers = document.querySelectorAll('.custom-marker')
+  if (existingMarkers) existingMarkers.forEach(marker => marker.remove());
 }
 
 // Function to load markers from chrome.storage
 function loadMarkers(videoUrl) {
-  // start without markers
-  const existingMarkers = document.querySelectorAll('.custom-marker')
-  if (existingMarkers) existingMarkers.forEach(marker => marker.remove());
+  removeExistingMarkers();
   const videoId = new URL(videoUrl).searchParams.get('v');
   chrome.storage.local.get([videoId], (result) => {
     if (result[videoId]) {
@@ -63,8 +88,8 @@ function loadMarkers(videoUrl) {
         if (markers[key] !== null) {
           // delay for loading
           setTimeout(
-           () => drawMarker(key, markers[key], document.querySelector('.ytp-progress-bar')),
-           1000);
+            () => drawMarker(key, markers[key], document.querySelector('.ytp-progress-bar')),
+            1000);
         }
       }
       console.log(`Markers for video ${videoId} loaded.`);
@@ -134,14 +159,6 @@ function removeMarkerFromProgressBar(key) {
   if (markerElement) {
     markerElement.remove();
   }
-}
-
-// Utility function to get a color based on the key
-function getMarkerColor(key) {
-  const colors = {
-    z: 'green', x: 'blue', c: 'brown', v: 'purple', b: 'orange',
-  };
-  return colors[key] || 'black';
 }
 
 // Optional: CSS for tooltips (append to the document head)

@@ -53,8 +53,8 @@ function saveMarkers(videoUrl) {
 // Function to load markers from chrome.storage
 function loadMarkers(videoUrl) {
   // start without markers
-  document.querySelectorAll('.custom-marker')
-    .forEach(marker => marker.remove());
+  const existingMarkers = document.querySelectorAll('.custom-marker')
+  if (existingMarkers) existingMarkers.forEach(marker => marker.remove());
   const videoId = new URL(videoUrl).searchParams.get('v');
   chrome.storage.local.get([videoId], (result) => {
     if (result[videoId]) {
@@ -103,34 +103,33 @@ function playFromMarker(key) {
 // Function to draw a marker on the progress bar for a given key
 function drawMarker(key, time, progressBar) {
   const markerElement = document.createElement('div');
+  // marker-key for removing old one
   markerElement.classList.add('custom-marker', `marker-${key}`);
-  markerElement.style.position = 'absolute';
 
   // Calculate marker position on progress bar
   const percent = time / document.querySelector('video').duration;
   markerElement.style.left = `${percent * 100}%`;
-  markerElement.style.top = '0';
-  markerElement.style.width = '2px';
-  markerElement.style.height = '100%';
   markerElement.style.backgroundColor = getMarkerColor(key);
-  markerElement.style.zIndex = '1000';
 
   // Set hover tooltip: Show the key and the timestamp
   const timeFormatted = new Date(time * 1000).toISOString().substr(11, 8); // Format time as HH:MM:SS
   markerElement.setAttribute('title', `${key.toUpperCase()}: ${timeFormatted}`);
 
   // Remove old marker for the same key
-  const existingMarker = document.querySelector(`.marker-${key}`);
-  if (existingMarker) {
-    existingMarker.remove();
-  }
+  removeMarkerFromProgressBar(key)
+
+  const markerBubble = document.createElement('div');
+  markerBubble.classList.add('marker-bubble');
+  const content = document.createTextNode(key.toUpperCase());
+  markerBubble.appendChild(content);
+  markerElement.appendChild(markerBubble);
 
   // Add new marker
   progressBar.appendChild(markerElement);
 }
 
 // Function to remove a marker visually from the progress bar
-function removeMarkerFromProgressBar(key, progressBar) {
+function removeMarkerFromProgressBar(key) {
   const markerElement = document.querySelector(`.marker-${key}`);
   if (markerElement) {
     markerElement.remove();
@@ -140,7 +139,7 @@ function removeMarkerFromProgressBar(key, progressBar) {
 // Utility function to get a color based on the key
 function getMarkerColor(key) {
   const colors = {
-    z: 'green', x: 'blue', c: 'brown', v: 'purple', b: 'cyan',
+    z: 'green', x: 'blue', c: 'brown', v: 'purple', b: 'orange',
   };
   return colors[key] || 'black';
 }
@@ -151,7 +150,9 @@ style.textContent = `
 .custom-marker {
   position: absolute;
   width: 2px;
-  height: 100%;
+  height: 200%;
+  top: -100%;
+  border: 1px solid black;
   z-index: 1000;
   cursor: pointer;
 }
@@ -167,6 +168,22 @@ style.textContent = `
   top: -25px;
   left: -10px;
   z-index: 1001;
+}
+.marker-bubble {
+  position: absolute;
+  background-color: inherit;
+  width: 12px;
+  height: 12px;
+  color: white;
+  border-radius: 50%;
+  top: -20px;
+  left: -3px;
+  border: inherit;
+  font-size: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 `;
 document.head.appendChild(style);

@@ -8,61 +8,50 @@ function renderMarkers() {
       const { markers, title, author } = items[videoId];
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-      // Create video item with title and author
-      const videoItem = document.createElement('div');
-      videoItem.classList.add('video-item');
+      // Create video item with title, author, link, and expand button
+      let videoItemHTML = `
+        <div class="video-item">
+          <span>Title: ${title} | Author: ${author}</span>
+          <a href="${videoUrl}" target="_blank"> [Open Video]</a>
+          <div class="expand-btn">▶</div>
+          <div class="marker-list" style="display: none;">
+      `;
 
-      const videoTitleElement = document.createElement('span');
-      videoTitleElement.textContent = `Title: ${title} | Author: ${author}`;
-      videoItem.appendChild(videoTitleElement);
-
-      // Create video link
-      const videoLink = document.createElement('a');
-      videoLink.href = videoUrl;
-      videoLink.textContent = ' [Open Video]';
-      videoLink.target = '_blank';
-      videoItem.appendChild(videoLink);
-
-      // Create expand/collapse button for markers
-      const expandButton = document.createElement('div');
-      expandButton.classList.add('expand-btn');
-      expandButton.textContent = '▶'; // Arrow symbol
-      videoItem.appendChild(expandButton);
-
-      // Create markers list
-      const markerList = document.createElement('div');
-      markerList.classList.add('marker-list');
-      markerList.style.display = 'none'; // Hidden by default
-
-      // List markers for this video
+      // Generate markers for this video
       for (let key in markers) {
         if (markers[key] !== null) {
           const timeFormatted = new Date(markers[key] * 1000).toISOString().substr(11, 8);
+          const markerLink = `${videoUrl}&t=${Math.floor(markers[key])}`;
 
-          const markerData = document.createElement('div');
-          markerData.textContent = `${key.toUpperCase()}: `;
-
-          const markerLink = document.createElement('a');
-          markerLink.href = `${videoUrl}&t=${Math.floor(markers[key])}`;
-          markerLink.textContent = `${timeFormatted}`;
-          markerLink.classList.add('marker-link');
-          markerLink.target = '_blank';
-          
-          markerData.appendChild(markerLink);
-          markerList.appendChild(markerData);
+          // Append links to marker times
+          videoItemHTML += `
+            <div>
+              ${key.toUpperCase()}: 
+              <a href="${markerLink}" class="marker-link" target="_blank">${timeFormatted}</a>
+            </div>
+          `;
         }
       }
 
-      // Toggle marker list visibility on button click
+      // Close the marker list and video item
+      videoItemHTML += `
+          </div>
+        </div>
+      `;
+
+      // Append the generated HTML to the video list
+      videoList.innerHTML += videoItemHTML;
+    }
+
+    // Add event listeners for expand/collapse functionality
+    videoList.querySelectorAll('.expand-btn').forEach((expandButton) => {
       expandButton.addEventListener('click', () => {
+        const markerList = expandButton.nextElementSibling;
         const isExpanded = markerList.style.display === 'block';
         markerList.style.display = isExpanded ? 'none' : 'block';
-        expandButton.textContent = isExpanded ? '▶' : '▼'; // Toggle arrow direction
+        expandButton.textContent = isExpanded ? '▶' : '▼';
       });
-
-      videoItem.appendChild(markerList);
-      videoList.appendChild(videoItem);
-    }
+    });
   });
 }
 

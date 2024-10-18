@@ -16,7 +16,7 @@
         "*://*.youtube.com/*"
       ],
       "js": [
-        "src/content/content.js"
+        "dist/content/content.js"
       ],
       "css": [
         "src/content/content.css"

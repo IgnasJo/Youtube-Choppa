@@ -137,31 +137,27 @@ function playFromMarker(key) {
 
 // Function to draw a marker on the progress bar for a given key
 function drawMarker(key, time, progressBar) {
-  const markerElement = document.createElement('div');
-  // marker-key for removing old one
-  markerElement.classList.add('custom-marker', `marker-${key}`);
-
   // Calculate marker position on progress bar
   const percent = time / document.querySelector('video').duration;
-  markerElement.style.left = `${percent * 100}%`;
-  markerElement.style.backgroundColor = getMarkerColor(key);
+  const timeFormatted = new Date(time * 1000).toISOString().slice(11, 19); // Format time as HH:MM:SS
+  const backgroundColor = getMarkerColor(key);
 
-  // Set hover tooltip: Show the key and the timestamp
-  const timeFormatted = new Date(time * 1000).toISOString().substr(11, 8); // Format time as HH:MM:SS
-  markerElement.setAttribute('title', `${key.toUpperCase()}: ${timeFormatted}`);
+  // Create marker HTML using string interpolation
+  const markerHTML = `
+    <div class="custom-marker marker-${key}" 
+         style="left: ${percent * 100}%; background-color: ${backgroundColor};" 
+         title="${key.toUpperCase()}: ${timeFormatted}">
+      <div class="marker-bubble">${key.toUpperCase()}</div>
+    </div>
+  `;
 
   // Remove old marker for the same key
-  removeMarkerFromProgressBar(key)
+  removeMarkerFromProgressBar(key);
 
-  const markerBubble = document.createElement('div');
-  markerBubble.classList.add('marker-bubble');
-  const content = document.createTextNode(key.toUpperCase());
-  markerBubble.appendChild(content);
-  markerElement.appendChild(markerBubble);
-
-  // Add new marker
-  progressBar.appendChild(markerElement);
+  // Append the new marker to the progress bar without disrupting existing markers
+  progressBar.insertAdjacentHTML('beforeend', markerHTML);
 }
+
 
 // Function to remove a marker visually from the progress bar
 function removeMarkerFromProgressBar(key) {

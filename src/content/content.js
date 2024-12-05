@@ -1,4 +1,4 @@
-// Dictionary to store marker times for keys 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'
+// Dictionary to store marker times for keys: z, x, c, v, b
 let markers = {
   z: null, x: null, c: null, v: null, b: null
 };
@@ -30,7 +30,9 @@ document.addEventListener('keydown', (event) => {
     if (event.ctrlKey) {
       deleteMarker(key); // Ctrl + key: delete marker
     }
-    else if (event.altKey) {
+    else {
+    // set modifier else time if needed
+    // else if (event.altKey) {
       if (markers[key] === null) {
         setMarker(key); // No marker exists, set one
       } else {
